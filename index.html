@@ -297,7 +297,8 @@ footer h4{text-transform:uppercase}
 
 <section class="hero" id="inicio">
   <a class="cue" href="#cardapio" aria-label="Ver cardápio"><svg class="i" viewBox="0 0 24 24" style="color:#fff"><path d="M6 9l6 6 6-6"/></svg></a>
-  <video id="vid" autoplay muted loop playsinline preload="auto" disablepictureinpicture aria-hidden="true"></video>
+  <video id="vid" autoplay muted loop playsinline webkit-playsinline preload="auto" disablepictureinpicture aria-hidden="true"></video>
+  <button id="videoStart" type="button" aria-label="Reproduzir vídeo da capa" style="display:none;position:absolute;z-index:3;top:50%;left:50%;transform:translate(-50%,-50%);width:72px;height:72px;border:0;border-radius:50%;background:#9b631c;color:#fff;font-size:32px;cursor:pointer">▶</button>
 </section>
 
 <main class="wrap sec" id="cardapio">
@@ -411,7 +412,7 @@ let sortBy="rel";const qtys={};let cat="Geral",term="";
 const count=()=>cart.reduce((a,i)=>a+i.qty,0),total=()=>cart.reduce((a,i)=>a+i.qty*P(i.id).preco,0);
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),1800)}
 /* ===== vídeo: loop contínuo, reinício a cada 15 s ===== */
-const vid=$("#vid");const mq=matchMedia("(max-aspect-ratio:1/1)");function setV(){const k=mq.matches?"m":"d";if(vid.dataset.k===k)return;vid.dataset.k=k;vid.poster=POS[k];vid.src=VID[k];vid.muted=true;vid.play().catch(()=>{})}if(mq.addEventListener)mq.addEventListener("change",setV);setV();vid.muted=true;vid.play().catch(()=>{});
+const vid=$("#vid"),videoStart=$("#videoStart");const mq=matchMedia("(max-aspect-ratio:1/1)");function playCover(){vid.muted=true;vid.defaultMuted=true;const p=vid.play();if(p)p.then(()=>videoStart.style.display="none").catch(()=>videoStart.style.display="block")}function setV(){const k=mq.matches?"m":"d";if(vid.dataset.k===k)return;vid.dataset.k=k;vid.poster=POS[k];vid.src=VID[k];vid.load();playCover()}if(mq.addEventListener)mq.addEventListener("change",setV);setV();videoStart.addEventListener("click",playCover);vid.addEventListener("playing",()=>videoStart.style.display="none");vid.addEventListener("error",()=>videoStart.style.display="block");
 let t0=Date.now();setInterval(()=>{if(Date.now()-t0>=15000){t0=Date.now();try{vid.currentTime=0;vid.play().catch(()=>{})}catch(e){}}},500);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)vid.play().catch(()=>{})});
 /* ===== cardápio ===== */

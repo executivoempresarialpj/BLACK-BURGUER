@@ -281,6 +281,18 @@ footer h4{text-transform:uppercase}
  .card{border-radius:16px}
 }
 @media(max-width:719px){.modal .mg{display:block}.modal .mg .ph{width:100%;min-height:0;height:min(42vh,340px);aspect-ratio:auto;flex:none}.modal .mg .ph img{width:100%;height:100%;object-fit:contain;background:#0b0b0b}.modal .mi{width:100%}}
+
+/* Uniform catalog cards: preserve the full original photo on every screen. */
+#grid{align-items:stretch}
+#grid > .card{flex-direction:column;min-width:0}
+#grid > .card > .ph{box-sizing:border-box;width:100%;height:auto;min-height:0;max-height:none;aspect-ratio:1 / 1;flex:0 0 auto;background:#0b0b0b}
+#grid > .card > .ph > img{box-sizing:border-box;display:block;width:100%;height:100%;max-height:none;object-fit:contain;object-position:center;padding:6px;background:#0b0b0b}
+#grid > .card:hover > .ph > img{transform:none}
+#grid > .card > .cb{min-width:0;flex:1 1 auto}
+#grid > .card > .cb > p{flex:1 1 auto}
+#grid > .card > .cb > .pr{margin-top:auto}
+@media(min-width:620px){#grid > .card > .cb > h3{min-height:2.4em}}
+@media(max-width:619px){#grid > .card > .cb{padding:12px;gap:8px}}
 </style>
 <style id="bb-mobile-cover-style">@media (max-aspect-ratio:1/1){.hero video{object-fit:contain;object-position:center}}</style>
 </head>

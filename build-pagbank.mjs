@@ -16,4 +16,4 @@ for(const name of ['index.html','blackburguer.html']){
  for(const script of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))new Function(script[1])
  await writeFile(new URL('./'+name,target),html)
 }
-console.log('Black Burguer: media preserved, PagBank checkout prepared.')
+console.log('Black Burguer: media preserved, website orders checkout prepared.')

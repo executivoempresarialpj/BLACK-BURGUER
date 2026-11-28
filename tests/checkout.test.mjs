@@ -42,3 +42,17 @@ test('checkout persists request keys across network retries and opens WhatsApp o
  assert.equal(payments[0].status,'pending')
  assert.equal(receipts.length,1,'unpaid Pix never generates a paid receipt')
 })
+
+
+test('cart sums cents for decimal prices and quantities in both published pages',async()=>{
+ for(const file of ['index.html','blackburguer.html']){
+  const html=await readFile(new URL('../dist/'+file,import.meta.url),'utf8')
+  const expression=html.match(/total=\(\)=>cart\.reduce\([^;\n]+/)[0]
+  const catalog={combo:{preco:39.99},burger:{preco:16.99},drink:{preco:0.10}}
+  const ctx=vm.createContext({P:id=>catalog[id],cart:[{id:'combo',qty:1},{id:'burger',qty:1}],Math,Number})
+  vm.runInContext('const '+expression,ctx)
+  assert.equal(vm.runInContext('total()',ctx),56.98)
+  ctx.cart=[{id:'burger',qty:3},{id:'drink',qty:3}]
+  assert.equal(vm.runInContext('total()',ctx),51.27)
+ }
+})

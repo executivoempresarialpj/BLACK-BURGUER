@@ -85,7 +85,7 @@ async function send(){
  const button=$("#nx");if(button){button.disabled=true;button.textContent="Registrando pedido…"}
  const w=window.open("about:blank","_blank");if(w)w.opener=null;
  try{
-  const payload={items:cart.map(i=>({id:i.id,quantity:i.qty})),customer:{name:val("nome"),phone:val("tel"),address:snap().end,notes:val("obs")+cart.filter(i=>i.note).map(i=>"\n"+P(i.id).nome+": "+i.note).join("")},payment_method:({"Pix":"pix","Dinheiro":"cash","Cartão de crédito":"credit","Cartão de débito":"debit"})[co.pag],fulfillment:co.tipo,expected_total:total()};
+  const payload={items:cart.map(i=>({id:i.id,quantity:i.qty})),customer:{name:val("nome"),phone:val("tel"),address:snap().end,notes:val("obs")+cart.filter(i=>i.note).map(i=>"\n"+P(i.id).nome+": "+i.note).join("")},payment_method:({"Pix":"pix","Dinheiro":"cash","Cartão de crédito":"credit","Cartão de débito":"debit"})[co.pag],fulfillment:co.tipo,expected_total:Number(total().toFixed(2))};
   const fingerprint=JSON.stringify(payload);
   let attempt;try{attempt=JSON.parse(localStorage.getItem("bb_order_attempt")||"null")}catch(e){}
   if(!attempt||attempt.fingerprint!==fingerprint)attempt={fingerprint,key:crypto.randomUUID()};

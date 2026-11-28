@@ -9,7 +9,10 @@ for(const name of ['index.html','blackburguer.html']){
  const start=original.indexOf('/* ===== checkout em etapas ===== */')
  const end=original.indexOf('/* ===== cabeçalho',start)
  if(start<0||end<start)throw Error('Checkout source markers missing: '+name)
- const html=original.slice(0,start)+checkout+original.slice(end)
+ const oldTotal='total=()=>cart.reduce((a,i)=>a+i.qty*P(i.id).preco,0)'
+ const centsTotal='total=()=>cart.reduce((cents,i)=>cents+i.qty*Math.round(Number(P(i.id).preco)*100),0)/100'
+ if(!original.includes(oldTotal))throw Error('Cart total source missing: '+name)
+ const html=(original.slice(0,start)+checkout+original.slice(end)).replace(oldTotal,centsTotal)
  for(const script of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))new Function(script[1])
  await writeFile(new URL('./'+name,target),html)
 }

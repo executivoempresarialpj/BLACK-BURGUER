@@ -1,0 +1,9 @@
+{
+  "name": "black-burguer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build-pagbank.mjs",
+    "test": "node build-pagbank.mjs && node --test tests/*.test.mjs"
+  }
+}

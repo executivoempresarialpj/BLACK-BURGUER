@@ -1,0 +1,5 @@
+{
+  "buildCommand": "node build-pagbank.mjs",
+  "outputDirectory": "dist",
+  "installCommand": ""
+}

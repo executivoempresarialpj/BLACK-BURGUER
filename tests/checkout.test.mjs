@@ -5,15 +5,15 @@ import vm from 'node:vm'
 import {randomUUID} from 'node:crypto'
 
 test('checkout persists request keys across network retries and opens WhatsApp only after registration',async()=>{
- const html=await readFile(new URL('../index.html',import.meta.url),'utf8')
+ const html=await readFile(new URL('../dist/index.html',import.meta.url),'utf8')
  const code=html.slice(html.indexOf('let bbSending=false;'),html.indexOf('/* ===== cabeçalho',html.indexOf('let bbSending=false;')))
- const storage=new Map(),requests=[],windows=[],receipts=[]
+ const storage=new Map(),requests=[],windows=[],receipts=[],payments=[]
  let fail=true
  const button={},error={}
  const context=vm.createContext({crypto:{randomUUID},AbortSignal,JSON,Error,
   $:s=>s==='#nx'?button:error,co:{pag:'Pix',tipo:'Retirada'},cart:[{id:'burger',qty:2,note:'Sem cebola'}],
   P:()=>({nome:'Burger'}),val:k=>({nome:'Teste Cliente',tel:'79999990000',obs:''})[k]||'',snap:()=>({end:'Retirada'}),total:()=>50,
-  BB_API:'https://example.invalid',BB_KEY:'publishable',
+  BB_PAY:'https://payments.invalid',showPixPayment:p=>payments.push(p),bbOnlinePix:false,BB_API:'https://example.invalid',BB_KEY:'publishable',
   localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
   window:{open:()=>{const w={closed:false,location:{replace:url=>w.url=url},close:()=>w.closed=true};windows.push(w);return w}},
   location:{},buildMsg:()=>context.co.no,waURL:msg=>'https://wa.me/?text='+msg,
@@ -34,4 +34,11 @@ test('checkout persists request keys across network retries and opens WhatsApp o
  assert.equal(windows[1].url,'https://wa.me/?text=BB-A1111111')
  assert.equal(receipts.length,1)
  assert.equal(receipts[0].integrationId,'a1111111-1111-4111-8111-111111111111')
+ context.bbOnlinePix=true
+ context.fetch=async(url,options)=>({ok:true,json:async()=>url===context.BB_PAY?{status:'pending',qr:'pix-code',total:50}:{id:'a1111111-1111-4111-8111-111111111111',total:50}})
+ await vm.runInContext('send()',context)
+ assert.equal(windows[2].closed,true)
+ assert.equal(windows[2].url,undefined,'online Pix must not redirect to WhatsApp before payment')
+ assert.equal(payments[0].status,'pending')
+ assert.equal(receipts.length,1,'unpaid Pix never generates a paid receipt')
 })

@@ -541,9 +541,34 @@ function drawReceipt(o){view="rc";$("#dTitle").textContent="Comprovante";
  $("#rsh").onclick=async()=>{try{const b=await (await fetch(await rcImg(o))).blob(),f=new File([b],"comprovante-"+o.no+".png",{type:"image/png"});if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],title:"Pedido "+o.no});else $("#rs").click()}catch(err){}};
  $("#rp").onclick=()=>window.print();
  const rr=$("#rr");if(rr)rr.onclick=()=>{o.items.forEach(i=>{const p=CONFIG.produtos.find(x=>x.nome===i.nome);if(p)add(p.id,i.qty,i.note)});drawCart()};const rw=$("#rw");if(rw)rw.onclick=()=>window.open(waURL(buildMsg()),"_blank");
- $("#rn").onclick=()=>{cart=[];co={};save();upd();closeAll()}}
-function send(){const w=window.open(waURL(buildMsg()),"_blank");if(!w)location.href=waURL(buildMsg());
- const o=snap();try{localStorage.setItem("bb_last",JSON.stringify(o));localStorage.setItem("bb_cust",JSON.stringify({nome:val("nome"),tel:val("tel"),rua:val("rua"),num:val("num"),bairro:val("bairro"),comp:val("comp"),ref:val("ref")}))}catch(e){}drawReceipt(o);toast("Confirme o envio no WhatsApp")}
+ $("#rn").onclick=()=>{try{localStorage.removeItem("bb_order_attempt")}catch(e){}cart=[];co={};save();upd();closeAll()}}
+let bbSending=false;
+async function send(){
+ if(bbSending)return;
+ bbSending=true;
+ const button=$("#nx");if(button){button.disabled=true;button.textContent="Registrando pedido…"}
+ const w=window.open("about:blank","_blank");if(w)w.opener=null;
+ try{
+  const payload={items:cart.map(i=>({id:i.id,quantity:i.qty})),customer:{name:val("nome"),phone:val("tel"),address:snap().end,notes:val("obs")+cart.filter(i=>i.note).map(i=>"\n"+P(i.id).nome+": "+i.note).join("")},payment_method:({"Pix":"pix","Dinheiro":"cash","Cartão de crédito":"credit","Cartão de débito":"debit"})[co.pag],fulfillment:co.tipo,expected_total:total()};
+  const fingerprint=JSON.stringify(payload);
+  let attempt;try{attempt=JSON.parse(localStorage.getItem("bb_order_attempt")||"null")}catch(e){}
+  if(!attempt||attempt.fingerprint!==fingerprint)attempt={fingerprint,key:crypto.randomUUID()};
+  try{localStorage.setItem("bb_order_attempt",JSON.stringify(attempt))}catch(e){}
+  co.integrationKey=attempt.key;
+  const response=await fetch(BB_API+"/rest/v1/rpc/submit_black_burguer_order",{method:"POST",headers:{apikey:BB_KEY,"Content-Type":"application/json"},body:JSON.stringify({request_key:co.integrationKey,...payload}),signal:AbortSignal.timeout(15000)});
+  const result=await response.json();
+  if(!response.ok)throw Error(result.message||"Não foi possível registrar o pedido. Tente novamente.");
+  co.no="BB-"+result.id.slice(0,8).toUpperCase();
+  const url=waURL(buildMsg());if(w)w.location.replace(url);else location.href=url;
+  const o=snap();o.integrationId=result.id;
+  try{localStorage.setItem("bb_last",JSON.stringify(o));localStorage.setItem("bb_cust",JSON.stringify({nome:val("nome"),tel:val("tel"),rua:val("rua"),num:val("num"),bairro:val("bairro"),comp:val("comp"),ref:val("ref")}))}catch(e){}
+  drawReceipt(o);toast("Pedido registrado. Confirme o envio no WhatsApp");
+ }catch(e){
+  if(w)w.close();
+  const error=$("#err");if(error)error.textContent=e.name==="TimeoutError"?"A conexão demorou. Tente novamente; seu pedido não será duplicado.":e.message||"Falha de conexão. Tente novamente.";
+  if(button){button.disabled=false;button.textContent="Enviar pelo WhatsApp"}
+ }finally{bbSending=false}
+}
 /* ===== cabeçalho e rolagem ===== */
 let ly=0;addEventListener("scroll",()=>{const y=scrollY,h=$("#hd");h.classList.toggle("s",y>30);const hide=y>260&&y>ly+4&&!document.body.classList.contains("lock");if(hide||y<=260||y<ly-4){h.classList.toggle("hid",hide);document.body.classList.toggle("hh",hide)}ly=y},{passive:true});
 const rio=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add("in")),{threshold:.1});$$(".rv").forEach(e=>rio.observe(e)); 
